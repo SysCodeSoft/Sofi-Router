@@ -19,7 +19,8 @@ use Sofi\http\Http;
 /**
  * Router
  */
-class Router {
+class Router
+{
 
     const ANY_METHOD = 510;
     const EVENT_BEFORE_ROUTE = 0;
@@ -43,7 +44,6 @@ class Router {
      * @var RouteCollection[]
      */
     protected $Collections = [];
-    
     public $result = [];
 
     /**
@@ -51,10 +51,7 @@ class Router {
      * @param type $CollectionClass
      * @param \Sofi\Router\Executer $ExecuterClass
      */
-    function __construct
-        (
-            \Sofi\Router\Executer $ExecuterClass = null
-        ) 
+    function __construct(\Sofi\Router\Executer $ExecuterClass = null)
     {
         if ($ExecuterClass == null) {
             $this->Executer = new Executer();
@@ -63,16 +60,18 @@ class Router {
         }
     }
 
-    public function collection(RouteCollection $Collection) {
+    public function collection(RouteCollection $Collection)
+    {
         $this->current ++;
         $this->Collections[$this->current] = $Collection;
 
         return $this;
     }
 
-    public function dispatch($uri, $method = Router::ANY_METHOD) {
+    public function dispatch($uri, $method = Router::ANY_METHOD)
+    {
         $this->result = [];
-        
+
         if (!empty($this->Collections[$this->current])) {
 //            $routes = $this->Collections[$this->current]->routesByMethod($method);
             foreach ($this->Collections[$this->current]->routesByMethod($method) as $Route) {

@@ -2,14 +2,16 @@
 
 namespace Sofi\Router;
 
-class Executer {
+class Executer
+{
 
-    public function exec($action, array $params = []) {
+    public function exec($action, array $params = [])
+    {
         // Маршрут замыкание
         if ($action instanceof \Closure) {
             return call_user_func($action, $params);
-            
-        // Маршрут задан строкой
+
+            // Маршрут задан строкой
         } elseif (is_string($action)) {
             if (mb_strpos($action, '{')) {
                 foreach ($params as $key => $val) {
@@ -21,11 +23,11 @@ class Executer {
 
             if (class_exists($callback[0])) {
                 $class = new $callback[0]();
-                
+
                 if (method_exists($class, 'init')) {
                     call_user_func([$class, 'init'], []);
                 }
-                
+
                 if (method_exists($class, $callback[1])) {
                     return call_user_func([$class, $callback[1]], $params);
                 } else {
@@ -36,9 +38,10 @@ class Executer {
             }
 
             throw new exceptions\InvalidRouteCallback('Bad callback ' . $action);
-        //  Маршрут задан массивом
-        }  elseif (is_array($action)) {
+            //  Маршрут задан массивом
+        } elseif (is_array($action)) {
             // TODO Маршрут массивом
         }
     }
+
 }

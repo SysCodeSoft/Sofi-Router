@@ -2,10 +2,10 @@
 
 namespace Sofi\Router\interfaces;
 
-interface ParserInterface {
-       
+interface ParserInterface
+{
+
     function getPattern($path);
 
     function parse($url, array $pattern);
-
 }

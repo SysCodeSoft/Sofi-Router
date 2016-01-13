@@ -1,4 +1,5 @@
 <?php
+
 namespace Sofi\Router\exceptions;
 
 class InvalidRouteCallback extends \Sofi\base\exceptions\Exception

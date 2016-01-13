@@ -2,7 +2,8 @@
 
 namespace Sofi\Router;
 
-class Parser implements interfaces\ParserInterface {
+class Parser implements interfaces\ParserInterface
+{
 
     public $templates = [
         '([а-яА-Я0-9a-zA-Z\-_]+)',
@@ -12,8 +13,9 @@ class Parser implements interfaces\ParserInterface {
         'latin' => '([a-zA-Z\-_]+)',
         'cirilic' => '([а-яА-Я\-_]+)'
     ];
-    
-    function getPattern($path) {
+
+    function getPattern($path)
+    {
         $names = [];
 
         $pattern = '^';
@@ -44,9 +46,10 @@ class Parser implements interfaces\ParserInterface {
         return [ $pattern, $names];
     }
 
-    function parse($uri, array $pattern) {
+    function parse($uri, array $pattern)
+    {
         $params = [];
-        
+
         if ($pattern[0] != '') {
             $rs = [];
 
@@ -57,7 +60,7 @@ class Parser implements interfaces\ParserInterface {
                     $params[$value] = current($rs);
                     next($rs);
                 }
-                
+
                 return $params;
             }
         }

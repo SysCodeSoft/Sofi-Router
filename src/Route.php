@@ -2,25 +2,26 @@
 
 namespace Sofi\Router;
 
-class Route {
+class Route
+{
+
     protected $path = '/';
     public $actions = [];
     public $filters = [];
     public $events = [];
     public $name;
-    
     protected $pattern = false;
     protected $param_names = [];
-    
+
     /**
      *
      * @var \Sofi\Router\Parser 
      */
     protected $Parser;
-    
     public $params = false;
 
-    public function __construct(interfaces\ParserInterface $Parser = null) {
+    public function __construct(interfaces\ParserInterface $Parser = null)
+    {
         $this->Parser = ($Parser === null) ? new Parser() : $Parser;
     }
 
@@ -35,18 +36,13 @@ class Route {
      * @param array $events Array callable events
      */
     function route(
-        $path = '/', 
-        array $actions = [], 
-        $method = Router::ANY_METHOD, 
-        $name = '', 
-        array $filters = [], 
-        array $events = []
-        ) 
+    $path = '/', array $actions = [], $method = Router::ANY_METHOD, $name = '', array $filters = [], array $events = []
+    )
     {
         $this->setPath($path);
 
         $this->actions[$method] = [$actions];
-        
+
         $this->name = $name;
         $this->filters = $filters;
         $this->events = $events;
@@ -54,7 +50,8 @@ class Route {
         return $this;
     }
 
-    public function setPath($path) {
+    public function setPath($path)
+    {
         $this->path = $path;
 
         if (!mb_strpos($this->path, '{')) {
@@ -64,63 +61,71 @@ class Route {
         }
     }
 
-    public function getPattern() {
+    public function getPattern()
+    {
         return [$this->pattern, $this->param_names];
     }
 
-    public function addAction($action, $method = self::ANY_METHOD) {
+    public function addAction($action, $method = self::ANY_METHOD)
+    {
         $this->actions[$method][] = $action;
 
         return $this;
     }
 
-    public function addFilter($filter) {
+    public function addFilter($filter)
+    {
         $this->filters[] = $filter;
 
         return $this;
     }
 
-    public function addEvent($event, $action) {
+    public function addEvent($event, $action)
+    {
         $this->events[$event][] = $action;
 
         return $this;
     }
 
-    public function alias($name) {
+    public function alias($name)
+    {
         $this->name = $name;
 
         return $this;
     }
 
-    public function parse($uri) {
+    public function parse($uri)
+    {
         if ($this->pattern) {
-             $this->params = $this->Parser->parse($uri, $this->getPattern());
-             
-             if ($this->params != false) {
-                 return $this;
-             }
+            $this->params = $this->Parser->parse($uri, $this->getPattern());
+
+            if ($this->params != false) {
+                return $this;
+            }
         } else {
             if ($uri == $this->path) {
                 $this->params = [];
-                
+
                 return $this;
             }
         }
-        
+
         return false;
     }
-    
-    function actionsByMethod($method) {
+
+    function actionsByMethod($method)
+    {
         foreach ($this->actions as $methods => $actions) {
             if (($methods == $method) || ($method & $methods) == $method) {
                 foreach ($actions as $action) {
                     yield $action;
-                }                
+                }
             }
         }
     }
 
-    public function checkMethod($method = Router::ANY_METHOD) {
+    public function checkMethod($method = Router::ANY_METHOD)
+    {
         foreach ($this->actions as $methods => $action) {
             if (($methods == $method) || ($method & $methods) == $method) {
                 return true;
