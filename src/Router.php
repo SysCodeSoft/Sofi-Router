@@ -14,7 +14,6 @@
 namespace Sofi\Router;
 
 use Sofi\Router\Route;
-use Sofi\http\Http;
 
 /**
  * Router
@@ -48,7 +47,6 @@ class Router
 
     /**
      * 
-     * @param type $CollectionClass
      * @param \Sofi\Router\Executer $ExecuterClass
      */
     function __construct(\Sofi\Router\Executer $ExecuterClass = null)
@@ -62,7 +60,7 @@ class Router
 
     public function collection(RouteCollection $Collection)
     {
-        $this->current ++;
+        $this->current++;
         $this->Collections[$this->current] = $Collection;
 
         return $this;

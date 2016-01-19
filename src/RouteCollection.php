@@ -47,7 +47,7 @@ class RouteCollection
      * @param string $name Alias route
      * @param type $filters
      * @param type $events
-     * @return \Sofi\base\RouteCollection
+     * @return RouteCollection
      */
     function route(
     $path = '/', array $actions = [], $method = Router::ANY_METHOD, $name = '', array $filters = [], array $events = []
@@ -60,7 +60,7 @@ class RouteCollection
     }
 
     /**
-     * @return \Sofi\Router\Route Route
+     * @return \Generator Route
      */
     function routes()
     {
@@ -70,7 +70,7 @@ class RouteCollection
     }
 
     /**
-     * @return \Sofi\Router\Route
+     * @return \Generator
      */
     function routesByMethod($method = Route::ANY_METHOD)
     {

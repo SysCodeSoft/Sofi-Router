@@ -43,7 +43,7 @@ class Parser implements interfaces\ParserInterface
         }
         $pattern .= '$';
 
-        return [ $pattern, $names];
+        return [$pattern, $names];
     }
 
     function parse($uri, array $pattern)
