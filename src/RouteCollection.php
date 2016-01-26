@@ -50,11 +50,18 @@ class RouteCollection
      * @return RouteCollection
      */
     function route(
-    $path = '/', array $actions = [], $method = Router::ANY_METHOD, $name = '', array $filters = [], array $events = []
+    $path = '/', $actions, $method = Router::ANY_METHOD, $name = '', array $filters = [], array $events = []
     )
     {
-        $this->collection[] = (new Route($this->Parser))
-                ->route($path, $actions, $method, $name, $filters, $events);
+        if (is_array($path)) {
+            foreach ($path as $p) {
+                $this->collection[] = (new Route($this->Parser))
+                        ->route($p, is_array($actions) ? $actions : [$actions], $method, $name, $filters, $events);
+            }
+        } else {
+            $this->collection[] = (new Route($this->Parser))
+                    ->route($path, is_array($actions) ? $actions : [$actions], $method, $name, $filters, $events);
+        }
 
         return $this;
     }
