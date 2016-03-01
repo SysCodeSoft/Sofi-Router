@@ -59,6 +59,8 @@ class Route
         } else {
             list($this->pattern, $this->param_names) = $this->Parser->getPattern($this->path);
         }
+
+        return $this;
     }
 
     public function getPattern()

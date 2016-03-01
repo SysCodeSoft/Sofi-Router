@@ -7,18 +7,18 @@ class RouteCollection
 
     /**
      *
-     * @var \Sofi\Router\Parser 
+     * @var \Sofi\Router\Parser
      */
     protected $Parser = null;
 
     /**
      *
-     * @var \Sofi\Router\Route[] array 
+     * @var \Sofi\Router\Route[] array
      */
     protected $collection = [];
 
     /**
-     * 
+     *
      * @param \Sofi\Router\interfaces\ParserInterface $Parser
      */
     function __construct(interfaces\ParserInterface $Parser = null)
@@ -27,20 +27,20 @@ class RouteCollection
     }
 
     /**
-     * 
+     *
      * @param \Sofi\Router\Router $Router
      * @return \Sofi\Router\RouteCollection
      */
-    function addRoute(Router $Router)
+    function addRoute(Route $Route)
     {
-        $this->collection[] = $Router;
+        $this->collection[] = $Route;
 
         return $this;
     }
 
     /**
      * Добавление роута
-     * 
+     *
      * @param string $path URL path
      * @param function|object $actions
      * @param int $method HTTP method
@@ -50,17 +50,17 @@ class RouteCollection
      * @return RouteCollection
      */
     function route(
-    $path = '/', $actions, $method = Router::ANY_METHOD, $name = '', array $filters = [], array $events = []
+        $path = '/', $actions, $method = Router::ANY_METHOD, $name = '', array $filters = [], array $events = []
     )
     {
         if (is_array($path)) {
             foreach ($path as $p) {
                 $this->collection[] = (new Route($this->Parser))
-                        ->route($p, is_array($actions) ? $actions : [$actions], $method, $name, $filters, $events);
+                    ->route($p, is_array($actions) ? $actions : [$actions], $method, $name, $filters, $events);
             }
         } else {
             $this->collection[] = (new Route($this->Parser))
-                    ->route($path, is_array($actions) ? $actions : [$actions], $method, $name, $filters, $events);
+                ->route($path, is_array($actions) ? $actions : [$actions], $method, $name, $filters, $events);
         }
 
         return $this;
