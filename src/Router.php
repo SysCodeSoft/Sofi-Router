@@ -86,10 +86,8 @@ class Router
                         );
                     }
 
-                     foreach ($Route->actionsByMethod($method) as $actions) {
-                        foreach ($actions as $action) {
-                            $this->result[] = $this->Executer->exec($action, $Route->params);
-                        }
+                    foreach ($Route->actionsByMethod($method) as $action) {
+                        $this->result[] = $this->Executer->exec($action, $Route->params);
                     }
 
                     if (isset($Route->events[self::EVENT_AFTER_ROUTE])) {

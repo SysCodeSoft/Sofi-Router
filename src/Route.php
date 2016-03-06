@@ -41,7 +41,7 @@ class Route
     {
         $this->setPath($path);
 
-        $this->actions[$method] = [$actions];
+        $this->actions[$method] = $actions;
 
         $this->name = $name;
         $this->filters = $filters;
@@ -68,7 +68,7 @@ class Route
         return [$this->pattern, $this->param_names];
     }
 
-    public function addAction($action, $method = self::ANY_METHOD)
+    public function addAction($action, $method = Router::ANY_METHOD)
     {
         $this->actions[$method][] = $action;
 
@@ -116,12 +116,10 @@ class Route
     }
 
     function actionsByMethod($method)
-    {
+    {        
         foreach ($this->actions as $methods => $actions) {
             if (($methods == $method) || ($method & $methods) == $method) {
-                foreach ($actions as $action) {
-                    yield $action;
-                }
+                return $actions;
             }
         }
     }
