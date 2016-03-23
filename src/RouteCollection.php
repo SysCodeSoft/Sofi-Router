@@ -50,16 +50,18 @@ class RouteCollection
      * @return RouteCollection
      */
     function route(
-        $path = '/', $actions, $method = Router::ANY_METHOD, $name = '', array $filters = [], array $events = []
+        $path = '/', $actions, $method = Router::ANY_METHOD, $name = null, array $filters = [], array $events = []
     )
     {
         if (is_array($path)) {
             foreach ($path as $p) {
-                $this->collection[] = (new Route($this->Parser))
+                $this->collection[$name ?: count($this->collection)] 
+                    = (new Route($this->Parser))
                     ->route($p, is_array($actions) ? $actions : [$actions], $method, $name, $filters, $events);
             }
         } else {
-            $this->collection[] = (new Route($this->Parser))
+            $this->collection[$name ?: count($this->collection)] 
+                = (new Route($this->Parser))
                 ->route($path, is_array($actions) ? $actions : [$actions], $method, $name, $filters, $events);
         }
 
@@ -67,21 +69,11 @@ class RouteCollection
     }
 
     /**
-     * @return \Generator Route
-     */
-    function routes()
-    {
-        foreach ($this->collection as $route) {
-            yield $route;
-        }
-    }
-
-    /**
      * @return \Generator
      */
-    function routesByMethod($method = Route::ANY_METHOD)
+    function routesByMethod($method = Router::ANY_METHOD)
     {
-        foreach ($this->routes() as $route) {
+        foreach ($this->collection as $route) {
             if ($route->checkMethod($method)) {
                 yield $route;
             }

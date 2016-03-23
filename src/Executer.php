@@ -9,9 +9,13 @@ class Executer
     {
         // Маршрут замыкание
         if ($action instanceof \Closure) {
-            return call_user_func($action, $params);
-
-            // Маршрут задан строкой
+            return call_user_func_array($action, $params);
+        
+        // 
+        } elseif (is_callable($action)) {
+            return $action(...array_values($params));
+            
+        // Маршрут задан строкой
         } elseif (is_string($action)) {
             if (mb_strpos($action, '{')) {
                 foreach ($params as $key => $val) {
@@ -29,7 +33,7 @@ class Executer
                 }
 
                 if (method_exists($class, $callback[1])) {
-                    return call_user_func([$class, $callback[1]], $params);
+                    return call_user_func_array([$class, $callback[1]], $params);
                 } else {
                     throw new exceptions\InvalidRouteCallback('Bad method callback ' . $action);
                 }

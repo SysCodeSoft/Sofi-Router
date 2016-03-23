@@ -6,10 +6,11 @@ class Route
 {
 
     protected $path = '/';
-    public $actions = [];
-    public $filters = [];
-    public $events = [];
-    public $name;
+    protected $actions = [];
+    protected $filters = [];
+    protected $events = [];
+    protected $name;
+    
     protected $pattern = false;
     protected $param_names = [];
 
@@ -54,7 +55,7 @@ class Route
     {
         $this->path = $path;
 
-        if (!mb_strpos($this->path, '{')) {
+        if (mb_strpos($this->path, '{') === false) {
             $this->pattern = false;
         } else {
             list($this->pattern, $this->param_names) = $this->Parser->getPattern($this->path);
@@ -66,6 +67,20 @@ class Route
     public function getPattern()
     {
         return [$this->pattern, $this->param_names];
+    }
+    
+    public function filters()
+    {
+        foreach ($this->filters as $filter) {
+            yield $filter;
+        }
+    }
+    
+    public function events(int $type)
+    {
+        foreach ($this->events[$type] as $event) {
+            yield $event;
+        }
     }
 
     public function addAction($action, $method = Router::ANY_METHOD)
@@ -116,7 +131,7 @@ class Route
     }
 
     function actionsByMethod($method)
-    {        
+    {
         foreach ($this->actions as $methods => $actions) {
             if (($methods == $method) || ($method & $methods) == $method) {
                 return $actions;
