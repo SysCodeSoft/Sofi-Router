@@ -30,15 +30,11 @@ class Router
     const DELETE = 32;
     const OPTIONS = 64;
     const PATCH = 128;
+    const AJAX = 256;
     const ANY_METHOD = 254;
+    // *****************************
     const EVENT_BEFORE_ROUTE = 0;
     const EVENT_AFTER_ROUTE = 1;
-
-    /**
-     *
-     * @var \Sofi\Router\Executer $Executer
-     */
-    public $Executer;
 
     /**
      * Route collections
@@ -46,58 +42,74 @@ class Router
      * @var RouteCollection[]
      */
     protected $Collection;
+    public $result;
 
     /**
      * 
      * @param \Sofi\Router\Executer $ExecuterClass
      */
-    function __construct(\Sofi\Router\Executer $ExecuterClass = null)
+    function __construct(RouteCollection $Collection = null)
     {
-        if ($ExecuterClass == null) {
-            $this->Executer = new Executer();
-        } else {
-            $this->Executer = $ExecuterClass;
+        if ($Collection == null) {
+            $Collection = new RouteCollection();
+        }
+
+        $this->setCollection($Collection);
+    }
+
+    function methodByName($name = 'GET')
+    {
+        switch ($name) {
+            case 'GET':
+                return self::GET;
+            case 'POST':
+                return self::POST;
+
+            default:
+                break;
         }
     }
 
-    public function collection(RouteCollection $Collection)
+    public function getCollection()
     {
-        $this->Collection = $Collection;
+        return $this->Collection;
+    }
+
+    public function setCollection(RouteCollection $Collection = null)
+    {
+        if ($Collection != null && $Collection instanceof RouteCollection) {
+            $this->Collection = $Collection;
+        }
 
         return $this;
     }
 
-    public function dispatch(\ServerRequestInterface $Request, \ResponseInterface $Response)
+    public function dispatch(ServerRequestInterface $Request, ResponseInterface $Response)
     {
-        $method = $Request->getMethod();
-
+        $method = $this->methodByName($Request->getMethod());
+        $result = [];
+                
         foreach ($this->Collection->routesByMethod($method) as $Route) {
             if ($Route->parse($Request->getUri()->getPath())) {
+                
                 foreach ($Route->filters() as $filter) {
-                    $Response = $this->Executer->exec($filter, [$Request, $Response]);
-                    if (!$Response) {
+                    $Res = \Sofi\Base\Sofi::exec($filter, [$Request, $Response]);
+                    if ($Res instanceof ResponseInterface) {
+                        return $Res;
+                    } elseif (!$Res) {
                         return $Response;
                     }
                 }
 
-                foreach ($Route->events(self::EVENT_BEFORE_ROUTE) as $event) {
-                    $this->Executer->exec($event, ['route' => $Route]);
-                }
-
-                foreach ($Route->actionsByMethod($method) as $action) {
-                    $this->result[] = $this->Executer->exec($action, $Route->params);
-                }
-
-                foreach ($Route->events(self::EVENT_AFTER_ROUTE) as $event) {
-                    $this->Executer->exec($event, ['route' => $Route, 'result' => $result]);
-                }
-
-                return $this;
+                $result[] = $Route;
             }
         }
 
+        if ($result != []) {
+            return $result;
+        }
 
-        throw new \Sofi\Router\exceptions\RouteNotFound($uri);
+        throw new \Sofi\Base\exceptions\RouteNotFound($Request->getUri());
     }
 
 }

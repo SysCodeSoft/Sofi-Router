@@ -31,9 +31,15 @@ class RouteCollection
      * @param \Sofi\Router\Router $Router
      * @return \Sofi\Router\RouteCollection
      */
-    function addRoute(Route $Route)
+    function registerRoute(Route $Route)
     {
-        $this->collection[] = $Route;
+        $name = $Route->getName();
+
+        if (is_string($name) && $name != '') {
+            $this->collection[$name] = $Route;
+        } else {
+            $this->collection[] = $Route;
+        }
 
         return $this;
     }
@@ -50,19 +56,17 @@ class RouteCollection
      * @return RouteCollection
      */
     function route(
-        $path = '/', $actions, $method = Router::ANY_METHOD, $name = null, array $filters = [], array $events = []
+    $path = '/', $actions, $method = Router::ANY_METHOD, $name = null, array $filters = [], array $events = []
     )
     {
         if (is_array($path)) {
             foreach ($path as $p) {
-                $this->collection[$name ?: count($this->collection)] 
-                    = (new Route($this->Parser))
-                    ->route($p, is_array($actions) ? $actions : [$actions], $method, $name, $filters, $events);
+                $this->collection[$name ?: count($this->collection)] = (new Route($this->Parser))
+                        ->route($p, is_array($actions) ? $actions : [$actions], $method, $name, $filters, $events);
             }
         } else {
-            $this->collection[$name ?: count($this->collection)] 
-                = (new Route($this->Parser))
-                ->route($path, is_array($actions) ? $actions : [$actions], $method, $name, $filters, $events);
+            $this->collection[$name ?: count($this->collection)] = (new Route($this->Parser))
+                    ->route($path, is_array($actions) ? $actions : [$actions], $method, $name, $filters, $events);
         }
 
         return $this;

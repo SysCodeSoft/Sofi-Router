@@ -10,9 +10,10 @@ class Route
     protected $filters = [];
     protected $events = [];
     protected $name;
-    
     protected $pattern = false;
     protected $param_names = [];
+    
+    protected $result = [];
 
     /**
      *
@@ -40,7 +41,7 @@ class Route
     $path = '/', array $actions = [], $method = Router::ANY_METHOD, $name = '', array $filters = [], array $events = []
     )
     {
-        $this->setPath($path);
+        $this->path($path);
 
         $this->actions[$method] = $actions;
 
@@ -50,8 +51,13 @@ class Route
 
         return $this;
     }
+    
+    public function getName()
+    {
+        return $this->name;
+    }
 
-    public function setPath($path)
+    public function path($path)
     {
         $this->path = $path;
 
@@ -68,19 +74,20 @@ class Route
     {
         return [$this->pattern, $this->param_names];
     }
-    
+
     public function filters()
     {
         foreach ($this->filters as $filter) {
             yield $filter;
         }
     }
-    
-    public function events(int $type)
+
+    public function events($type)
     {
-        foreach ($this->events[$type] as $event) {
-            yield $event;
-        }
+        if (isset($this->events[$type]) && is_array($this->events[$type]))
+            foreach ($this->events[$type] as $event) {
+                yield $event;
+            }
     }
 
     public function addAction($action, $method = Router::ANY_METHOD)
@@ -147,6 +154,31 @@ class Route
             }
         }
         return false;
+    }
+
+    public function run()
+    {
+        foreach ($this->events(Router::EVENT_BEFORE_ROUTE) as $event) {
+            \Sofi\Base\Sofi::exec($event, ['route' => $this]);
+        }
+        
+        /**
+         * TODO Methods
+         */
+        $method = 
+                \Sofi\Base\Sofi::app()->Router->methodByName(
+                        \Sofi\Base\Sofi::app()->Request->getMethod()
+                    );
+
+        foreach ($this->actionsByMethod($method) as $action) {
+            $this->result[] = \Sofi\Base\Sofi::exec($action, $this->params);
+        }
+
+        foreach ($this->events(Router::EVENT_AFTER_ROUTE) as $event) {
+            \Sofi\Base\Sofi::exec($event, ['route' => $this, 'result' => $result]);
+        }
+        
+        return $this->result;
     }
 
 }
