@@ -44,19 +44,6 @@ class Router
     protected $Collection;
     public $result;
 
-    /**
-     * 
-     * @param \Sofi\Router\Executer $ExecuterClass
-     */
-    function __construct(RouteCollection $Collection = null)
-    {
-        if ($Collection == null) {
-            $Collection = new RouteCollection();
-        }
-
-        $this->setCollection($Collection);
-    }
-
     function methodByName($name = 'GET')
     {
         switch ($name) {
@@ -72,6 +59,10 @@ class Router
 
     public function getCollection()
     {
+        if ($this->Collection == null) {
+            $this->Collection = new RouteCollection();
+        }
+
         return $this->Collection;
     }
 
@@ -84,32 +75,33 @@ class Router
         return $this;
     }
 
-    public function dispatch(ServerRequestInterface $Request, ResponseInterface $Response)
+    public function dispatch(Context $Context)
     {
-        $method = $this->methodByName($Request->getMethod());
+        $method = $this->methodByName($Context->Request->getMethod());
         $result = [];
-                
+
         foreach ($this->Collection->routesByMethod($method) as $Route) {
-            if ($Route->parse($Request->getUri()->getPath())) {
-                
+            if ($Route->parse($Context->Request->getUri()->getPath())) {
+
                 foreach ($Route->filters() as $filter) {
-                    $Res = \Sofi\Base\Sofi::exec($filter, [$Request, $Response]);
-                    if ($Res instanceof ResponseInterface) {
-                        return $Res;
-                    } elseif (!$Res) {
-                        return $Response;
+                    if (!\Sofi\Base\Sofi::exec($filter, [$Context])) {
+                        return $Context;
                     }
                 }
 
-                $result[] = $Route;
+                $Route->setMethod($method);
+                $Route->setContext($Context);
+                
+                return $Context;
             }
         }
 
-        if ($result != []) {
-            return $result;
+        if ($routeNotFound = $this->Collection->routeNotFound()) {            
+            $Context->Route = (new Route)->alias('pageNotFound')->addAction($routeNotFound);
+            return $Context;
+        } else {
+            throw new \Sofi\Base\exceptions\RouteNotFound($Context->Request->getUri());
         }
-
-        throw new \Sofi\Base\exceptions\RouteNotFound($Request->getUri());
     }
 
 }

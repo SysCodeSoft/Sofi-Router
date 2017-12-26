@@ -16,6 +16,14 @@ class RouteCollection
      * @var \Sofi\Router\Route[] array
      */
     protected $collection = [];
+    
+    /**
+     *
+     * @var \Sofi\Router\Route Route for incident not found route 
+     */
+    protected $routeNotFound = null;
+    
+    
 
     /**
      *
@@ -42,6 +50,22 @@ class RouteCollection
         }
 
         return $this;
+    }
+    
+    /**
+     *
+     * @return \Sofi\Router\RouteCollection
+     */
+    function registerRouteNotFound($Route)
+    {
+        $this->routeNotFound = $Route;
+
+        return $this;
+    }
+    
+    function routeNotFound()
+    {
+        return $this->routeNotFound;
     }
 
     /**
@@ -73,7 +97,7 @@ class RouteCollection
     }
 
     /**
-     * @return \Generator
+     * @return \Sofi\Router\Route
      */
     function routesByMethod($method = Router::ANY_METHOD)
     {

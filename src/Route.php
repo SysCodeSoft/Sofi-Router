@@ -13,7 +13,13 @@ class Route
     protected $pattern = false;
     protected $param_names = [];
     
-    protected $result = [];
+    protected $use_method = Router::ANY_METHOD;
+    
+    /**
+     *
+     * @var \Sofi\Router\Context
+     */
+    protected $Context;
 
     /**
      *
@@ -51,7 +57,7 @@ class Route
 
         return $this;
     }
-    
+
     public function getName()
     {
         return $this->name;
@@ -155,30 +161,35 @@ class Route
         }
         return false;
     }
+    
+    public function setMethod($method = Router::ANY_METHOD)
+    {
+        $this->use_method = $method;
+        
+        return $this;
+    }
+
+    public function setContext(Context $Context)
+    {
+        $this->Context = $Context;
+        $Context->Route = $this;
+        
+        return $this;
+    }
 
     public function run()
     {
         foreach ($this->events(Router::EVENT_BEFORE_ROUTE) as $event) {
-            \Sofi\Base\Sofi::exec($event, ['route' => $this]);
+            \Sofi\Base\Sofi::exec($event, ['Context' => $this->Context]);
         }
         
-        /**
-         * TODO Methods
-         */
-        $method = 
-                \Sofi\Base\Sofi::app()->Router->methodByName(
-                        \Sofi\Base\Sofi::app()->Request->getMethod()
-                    );
-
-        foreach ($this->actionsByMethod($method) as $action) {
-            $this->result[] = \Sofi\Base\Sofi::exec($action, $this->params);
+        foreach ($this->actionsByMethod($this->use_method) as $action) {
+            yield \Sofi\Base\Sofi::exec($action, is_array($this->params)?$this->params:[], ['Context' => $this->Context]);
         }
 
         foreach ($this->events(Router::EVENT_AFTER_ROUTE) as $event) {
-            \Sofi\Base\Sofi::exec($event, ['route' => $this, 'result' => $result]);
+            \Sofi\Base\Sofi::exec($event, ['Context' => $this->Context]);
         }
-        
-        return $this->result;
     }
 
 }
