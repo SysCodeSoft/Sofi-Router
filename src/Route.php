@@ -6,6 +6,7 @@ class Route
 {
 
     protected $path = '/';
+    protected $realPath = '';
     protected $actions = [];
     protected $filters = [];
     protected $events = [];
@@ -175,6 +176,11 @@ class Route
         $Context->Route = $this;
         
         return $this;
+    }
+    
+    public function getPath()
+    {
+        return $this->path;
     }
 
     public function run()

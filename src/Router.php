@@ -20,8 +20,11 @@ use Psr\Http\Message\ResponseInterface as ResponseInterface;
 /**
  * Router
  */
-class Router
-{
+class Router extends \Sofi\Base\Initialized
+{    
+    protected $controllerParse = false;
+    protected $controllerPaths = ['app/controllers'];
+    protected $Routes = [];
 
     const HEAD = 2;
     const GET = 4;
@@ -42,8 +45,18 @@ class Router
      * @var RouteCollection[]
      */
     protected $Collection;
-    public $result;
-
+    public $result; 
+    
+    public function init($params = array())
+    {
+        parent::init($params);
+        
+        if ($this->controllerParse) {
+            $this->Collection = (new ControllerParser($this->controllerPaths))->parse();
+        }
+    }
+    
+    
     function methodByName($name = 'GET')
     {
         switch ($name) {
@@ -96,8 +109,9 @@ class Router
             }
         }
 
-        if ($routeNotFound = $this->Collection->routeNotFound()) {            
+        if ($routeNotFound = $this->Collection->routeNotFound()) {
             $Context->Route = (new Route)->alias('pageNotFound')->addAction($routeNotFound);
+            $Context->Route->setContext($Context);
             return $Context;
         } else {
             throw new \Sofi\Base\exceptions\RouteNotFound($Context->Request->getUri());

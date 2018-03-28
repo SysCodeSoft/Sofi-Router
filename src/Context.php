@@ -47,28 +47,35 @@ class Context
     public function prepareResult()
     {
         $Priority = $this->requestAcceptPriority();
-        \Sofi\Base\Sofi::d($Priority);
+//        \Sofi\Base\Sofi::d($Priority);
         foreach ($this->Route->run() as $r) {
             $this->Result[] = (string) $r;
         }
 
-        \Sofi\Base\Sofi::d($this->Result);
+//        \Sofi\Base\Sofi::d($this->Result);
     }
 
-    public function prepareRequest(\stdClass $Wrapper = null)
+    public function prepareResponse(callable $Wrapper = null)
     {
         if ($this->Result != null) {
-            $bodyS = $Context->Response->getBody();
+            $bodyS = $this->Response->getBody();
+            $content = '';
             foreach ($this->Result as $key => $value) {
-                $bodyS->write($value);
+                $content .= $value;
             }
-            $body = $this->Layout
-                    ->addContent($res)
-                    ->render();
-            $bodyS->write($body);
+            if (is_callable($Wrapper))
+            {
+                $content = $Wrapper($content);
+            }
+            $bodyS->write($content);
         }
 
         return false;
     }
-
+    
+    function __get($name)
+    {
+        return '';
+    }
+    
 }
