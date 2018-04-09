@@ -5,54 +5,42 @@ namespace Sofi\Router;
 /**
  * Контекст вызова
  * 
- * @property \Sofi\HTTP\message\Request   $Request
- * @property \Sofi\Router\Route          $Route
- * @property \Sofi\HTTP\message\Response  $Response
+ * @property \Sofi\HTTP\message\ServerRequest  $Request
+ * @property \Sofi\HTTP\message\Response       $Response
+ * @property \Sofi\Router\Router               $Router
+ * @property \Sofi\Router\Route                $Route
+ * @property \Sofi\mvc\web\Page                $Page
  * 
  */
-class Context
+class Context extends \stdClass implements \Psr\Http\Server\RequestHandlerInterface
 {
+
     public $Request = null;
     public $Response = null;
-    public $Route = null;
-    public $Result = null;
     
-    protected $runtimeData = [];
-
-    function __construct()
+    public $Router = null;
+    
+    public $Route = null;
+    public $Wrapper = null;
+    
+    public $Result = null;
+    public $Page;
+    
+    function __construct(Router $Router, callable $wrapper)
     {
-        $this->Request = \Sofi\HTTP\message\Request::createFromGlobals();
+        $this->Request = \Sofi\HTTP\message\ServerRequest::createFromGlobals();
         $this->Response = new \Sofi\HTTP\message\Response();
-    }
-
-    public function requestAcceptPriority()
-    {
-        if (!empty($this->runtimeData['AcceptPriority']))
-            return $this->runtimeData['AcceptPriority'];
-        
-        $Accept = explode(',', $this->Request->getHeader('Accept')[0]);
-        $this->runtimeData['AcceptPriority'] = [];
-        foreach ($Accept as $value) {
-            $q = explode(';', $value);
-            if (isset($q[1])) {
-                $this->runtimeData['AcceptPriority'][10 * floatval(mb_substr($q[1], 2))][] = $q[0];
-            } else {
-                $this->runtimeData['AcceptPriority'][10][] = $q[0];
-            }
-        }
-
-        return $this->runtimeData['AcceptPriority'];
+        $this->Router = $Router;
+        $this->Wrapper = $wrapper;
+        $this->Page = new \Sofi\mvc\web\Page();
     }
 
     public function prepareResult()
     {
-        $Priority = $this->requestAcceptPriority();
-//        \Sofi\Base\Sofi::d($Priority);
+        $Priority = $this->Request->requestAcceptPriority();
         foreach ($this->Route->run() as $r) {
             $this->Result[] = (string) $r;
         }
-
-//        \Sofi\Base\Sofi::d($this->Result);
     }
 
     public function prepareResponse(callable $Wrapper = null)
@@ -63,8 +51,7 @@ class Context
             foreach ($this->Result as $key => $value) {
                 $content .= $value;
             }
-            if (is_callable($Wrapper))
-            {
+            if (is_callable($Wrapper)) {
                 $content = $Wrapper($content);
             }
             $bodyS->write($content);
@@ -72,10 +59,21 @@ class Context
 
         return false;
     }
-    
-    function __get($name)
+
+    public function dispatch()
     {
-        return '';
+        $this->Route = $this->Router->dispatch($this->Request);
+        $this->Route->setContext($this);
+
+        $this->prepareResult();
+        
+        $this->Wrapper->Context = $this;
+        $this->prepareResponse($this->Wrapper ?? null);
     }
-    
+
+    public function handle(\Psr\Http\Message\ServerRequestInterface $request): \Psr\Http\Message\ResponseInterface
+    {
+        
+    }
+
 }

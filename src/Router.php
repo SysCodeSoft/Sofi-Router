@@ -14,8 +14,9 @@
 namespace Sofi\Router;
 
 use Sofi\Router\Route;
-use Psr\Http\Message\ServerRequestInterface as ServerRequestInterface;
-use Psr\Http\Message\ResponseInterface as ResponseInterface;
+use \Psr\Http\Message\ServerRequestInterface;
+use \Psr\Http\Message\ResponseInterface;
+use \Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * Router
@@ -88,33 +89,26 @@ class Router extends \Sofi\Base\Initialized
         return $this;
     }
 
-    public function dispatch(Context $Context)
+    /**
+     * 
+     * @param \Sofi\Router\Context $Context
+     * @return Route
+     * @throws \Sofi\Base\exceptions\RouteNotFound
+     */
+    public function dispatch(\Sofi\HTTP\message\ServerRequest $Request) : Route
     {
-        $method = $this->methodByName($Context->Request->getMethod());
-        $result = [];
+        $method = $this->methodByName($Request->getMethod());
 
         foreach ($this->Collection->routesByMethod($method) as $Route) {
-            if ($Route->parse($Context->Request->getUri()->getPath())) {
-
-                foreach ($Route->filters() as $filter) {
-                    if (!\Sofi\Base\Sofi::exec($filter, [$Context])) {
-                        return $Context;
-                    }
-                }
-
-                $Route->setMethod($method);
-                $Route->setContext($Context);
-                
-                return $Context;
+            if ($Route->parse($Request->getUri()->getPath())) {
+                return $Route->setMethod($method);
             }
         }
 
         if ($routeNotFound = $this->Collection->routeNotFound()) {
-            $Context->Route = (new Route)->alias('pageNotFound')->addAction($routeNotFound);
-            $Context->Route->setContext($Context);
-            return $Context;
+            return (new Route)->alias('pageNotFound')->addAction($routeNotFound);
         } else {
-            throw new \Sofi\Base\exceptions\RouteNotFound($Context->Request->getUri());
+            throw new \Sofi\Base\exceptions\RouteNotFound($Request->getUri());
         }
     }
 

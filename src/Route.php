@@ -2,14 +2,15 @@
 
 namespace Sofi\Router;
 
-class Route
+use \Psr\Http\Message\ServerRequestInterface;
+use \Psr\Http\Message\ResponseInterface;
+use \Psr\Http\Server\RequestHandlerInterface;
+
+class Route  implements \Psr\Http\Server\MiddlewareInterface
 {
 
     protected $path = '/';
-    protected $realPath = '';
     protected $actions = [];
-    protected $filters = [];
-    protected $events = [];
     protected $name;
     protected $pattern = false;
     protected $param_names = [];
@@ -41,20 +42,12 @@ class Route
      * @param array $actions Array actions for route
      * @param int|string $method Request method
      * @param string $name Alias for route
-     * @param array $filters Array callable filters
-     * @param array $events Array callable events
      */
-    function route(
-    $path = '/', array $actions = [], $method = Router::ANY_METHOD, $name = '', array $filters = [], array $events = []
-    )
+    function route($path = '/', array $actions = [], $method = Router::ANY_METHOD, $name = '')
     {
         $this->path($path);
-
         $this->actions[$method] = $actions;
-
         $this->name = $name;
-        $this->filters = $filters;
-        $this->events = $events;
 
         return $this;
     }
@@ -82,38 +75,9 @@ class Route
         return [$this->pattern, $this->param_names];
     }
 
-    public function filters()
-    {
-        foreach ($this->filters as $filter) {
-            yield $filter;
-        }
-    }
-
-    public function events($type)
-    {
-        if (isset($this->events[$type]) && is_array($this->events[$type]))
-            foreach ($this->events[$type] as $event) {
-                yield $event;
-            }
-    }
-
     public function addAction($action, $method = Router::ANY_METHOD)
     {
         $this->actions[$method][] = $action;
-
-        return $this;
-    }
-
-    public function addFilter($filter)
-    {
-        $this->filters[] = $filter;
-
-        return $this;
-    }
-
-    public function addEvent($event, $action)
-    {
-        $this->events[$event][] = $action;
 
         return $this;
     }
@@ -185,17 +149,14 @@ class Route
 
     public function run()
     {
-        foreach ($this->events(Router::EVENT_BEFORE_ROUTE) as $event) {
-            \Sofi\Base\Sofi::exec($event, ['Context' => $this->Context]);
-        }
-        
         foreach ($this->actionsByMethod($this->use_method) as $action) {
             yield \Sofi\Base\Sofi::exec($action, is_array($this->params)?$this->params:[], ['Context' => $this->Context]);
         }
+    }
 
-        foreach ($this->events(Router::EVENT_AFTER_ROUTE) as $event) {
-            \Sofi\Base\Sofi::exec($event, ['Context' => $this->Context]);
-        }
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
+        
     }
 
 }
